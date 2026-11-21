@@ -1,0 +1,6 @@
+{
+  "name": "Compiler Design Analyzer & Error Correction Agent",
+  "description": "Student-grade compiler analysis agent in Python and TypeScript: Lexical, Syntax, and Semantic analysis with deterministic error detection and rule-based auto-correction.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
