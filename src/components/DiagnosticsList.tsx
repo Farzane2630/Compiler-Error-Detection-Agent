@@ -15,13 +15,17 @@ interface DiagnosticsListProps {
   sourceCode: string;
   onApplySingleFix?: (error: CompilerError) => void;
   onAutoCorrectAll: () => void;
+  lastAnalyzedAt?: string | null;
+  justAnalyzed?: boolean;
 }
 
 export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
   errors,
   sourceCode,
   onApplySingleFix,
-  onAutoCorrectAll
+  onAutoCorrectAll,
+  lastAnalyzedAt = null,
+  justAnalyzed = false
 }) => {
   const [selectedPhase, setSelectedPhase] = useState<'ALL' | ErrorPhase>('ALL');
 
@@ -66,6 +70,33 @@ export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
 
   return (
     <div className="flex flex-col h-full space-y-4">
+      {/* Analysis Run Status Banner */}
+      <div
+        className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-lg border text-xs transition-all ${
+          justAnalyzed
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-700 dark:text-emerald-200 ring-2 ring-emerald-400/40'
+            : 'bg-white border-slate-200 text-slate-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
+        }`}
+      >
+        <div className="flex items-center gap-2 font-medium">
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              errors.length === 0 ? 'bg-emerald-500' : 'bg-amber-500'
+            }`}
+          />
+          <span>
+            {errors.length === 0
+              ? 'Analysis complete · 0 errors'
+              : `Analysis complete · ${errors.length} ${errors.length === 1 ? 'error' : 'errors'} detected`}
+          </span>
+        </div>
+        {lastAnalyzedAt && (
+          <span className="font-mono text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+            Last run: {lastAnalyzedAt}
+          </span>
+        )}
+      </div>
+
       {/* 3-Phase Pipeline Status Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
         {/* Phase 1: Lexical */}
@@ -163,6 +194,7 @@ export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-b border-slate-200 dark:border-slate-800 pb-2">
         <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
           <button
+            type="button"
             onClick={() => setSelectedPhase('ALL')}
             className={`px-2.5 py-1.5 text-xs rounded-md font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
               selectedPhase === 'ALL'
@@ -173,6 +205,7 @@ export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
             All ({errors.length})
           </button>
           <button
+            type="button"
             onClick={() => setSelectedPhase(ErrorPhase.LEXICAL)}
             className={`px-2.5 py-1.5 text-xs rounded-md font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
               selectedPhase === ErrorPhase.LEXICAL
@@ -183,6 +216,7 @@ export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
             Lexical ({lexicalErrors.length})
           </button>
           <button
+            type="button"
             onClick={() => setSelectedPhase(ErrorPhase.SYNTAX)}
             className={`px-2.5 py-1.5 text-xs rounded-md font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
               selectedPhase === ErrorPhase.SYNTAX
@@ -193,6 +227,7 @@ export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
             Syntax ({syntaxErrors.length})
           </button>
           <button
+            type="button"
             onClick={() => setSelectedPhase(ErrorPhase.SEMANTIC)}
             className={`px-2.5 py-1.5 text-xs rounded-md font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
               selectedPhase === ErrorPhase.SEMANTIC
@@ -206,6 +241,7 @@ export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
 
         {errors.length > 0 && (
           <button
+            type="button"
             onClick={onAutoCorrectAll}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/70 dark:text-amber-200 rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
@@ -312,6 +348,7 @@ export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
 
                     {onApplySingleFix && (
                       <button
+                        type="button"
                         onClick={() => onApplySingleFix(err)}
                         className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:text-indigo-300 dark:hover:bg-indigo-900 rounded shrink-0 transition-colors cursor-pointer self-end sm:self-auto"
                       >

@@ -9,6 +9,7 @@ interface HeaderProps {
   onRunAnalysis: () => void;
   onAutoCorrect: () => void;
   errorCount: number;
+  justAnalyzed?: boolean;
 }
 
 const NAV_ITEMS: { id: ActiveTab; label: string; mobileLabel: string }[] = [
@@ -23,7 +24,8 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   onRunAnalysis,
   onAutoCorrect,
-  errorCount
+  errorCount,
+  justAnalyzed = false
 }) => {
   return (
     <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 md:sticky md:top-0 z-30 transition-colors">
@@ -44,6 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
+              type="button"
               onClick={() => setActiveTab(item.id)}
               className={`whitespace-nowrap shrink-0 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer ${
                 activeTab === item.id
@@ -74,6 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {errorCount > 0 && (
             <button
+              type="button"
               onClick={onAutoCorrect}
               className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] text-xs font-medium text-amber-900 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-200 dark:hover:bg-amber-900/60 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               title="Apply deterministic rule-based corrections"
@@ -85,12 +89,17 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           <button
+            type="button"
             onClick={onRunAnalysis}
-            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 min-h-[36px] text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 min-h-[36px] text-xs font-semibold text-white rounded-lg shadow-sm transition-all whitespace-nowrap shrink-0 cursor-pointer active:scale-95 ${
+              justAnalyzed
+                ? 'bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-400/50'
+                : 'bg-indigo-600 hover:bg-indigo-700'
+            }`}
           >
             <Play className="w-3.5 h-3.5 fill-current shrink-0" />
-            <span className="sm:hidden">Analyze</span>
-            <span className="hidden sm:inline">Analyze Code</span>
+            <span className="sm:hidden">{justAnalyzed ? 'Done!' : 'Analyze'}</span>
+            <span className="hidden sm:inline">{justAnalyzed ? 'Analyzed!' : 'Analyze Code'}</span>
           </button>
         </div>
       </div>
@@ -104,6 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
+              type="button"
               onClick={() => setActiveTab(item.id)}
               className={`px-3 py-1.5 min-h-[36px] text-xs font-medium rounded-md whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                 activeTab === item.id

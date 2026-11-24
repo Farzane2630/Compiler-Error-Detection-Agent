@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header, ActiveTab } from './components/Header';
 import { CodeEditor } from './components/CodeEditor';
 import { DiagnosticsList } from './components/DiagnosticsList';
@@ -39,6 +39,9 @@ export default function App() {
   const [isAutoCorrectOpen, setIsAutoCorrectOpen] = useState(false);
   const [correctedCode, setCorrectedCode] = useState('');
   const [correctionActions, setCorrectionActions] = useState<CorrectionAction[]>([]);
+  const [lastAnalyzedAt, setLastAnalyzedAt] = useState<string | null>(null);
+  const [justAnalyzed, setJustAnalyzed] = useState(false);
+  const analyzeTimerRef = useRef<number | null>(null);
 
   // Compiler Analysis Pipeline
   const runAnalysis = useCallback((source: string) => {
@@ -67,12 +70,54 @@ export default function App() {
       ast,
       symbols
     });
+
+    setLastAnalyzedAt(
+      new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    );
   }, []);
 
   // Run on mount or when code changes
   useEffect(() => {
     runAnalysis(code);
   }, [code, runAnalysis]);
+
+  useEffect(() => {
+    return () => {
+      if (analyzeTimerRef.current !== null) {
+        window.clearTimeout(analyzeTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleManualAnalyze = useCallback(() => {
+    runAnalysis(code);
+
+    if (activeTab !== 'editor') {
+      setActiveTab('editor');
+    }
+
+    setJustAnalyzed(true);
+    if (analyzeTimerRef.current !== null) {
+      window.clearTimeout(analyzeTimerRef.current);
+    }
+    analyzeTimerRef.current = window.setTimeout(() => {
+      setJustAnalyzed(false);
+      analyzeTimerRef.current = null;
+    }, 1500);
+
+    window.setTimeout(() => {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        const panel = document.getElementById('diagnostics-panel');
+        if (panel) {
+          panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }, 60);
+  }, [activeTab, code, runAnalysis]);
 
   const handleSelectPreset = (preset: CodePreset) => {
     setSelectedPresetId(preset.id);
@@ -104,9 +149,10 @@ export default function App() {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onRunAnalysis={() => runAnalysis(code)}
+        onRunAnalysis={handleManualAnalyze}
         onAutoCorrect={handleOpenAutoCorrect}
         errorCount={result.allErrors.length}
+        justAnalyzed={justAnalyzed}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8">
@@ -117,20 +163,26 @@ export default function App() {
               <CodeEditor
                 code={code}
                 setCode={setCode}
-                onAnalyze={() => runAnalysis(code)}
+                onAnalyze={handleManualAnalyze}
                 onAutoCorrect={handleOpenAutoCorrect}
                 selectedPresetId={selectedPresetId}
                 onSelectPreset={handleSelectPreset}
                 errorLineNumbers={errorLineNumbers}
+                justAnalyzed={justAnalyzed}
               />
             </div>
 
-            <div className="lg:col-span-6 h-auto lg:h-[calc(100vh-11rem)] lg:min-h-[540px] lg:max-h-[760px] flex flex-col">
+            <div
+              id="diagnostics-panel"
+              className="lg:col-span-6 h-auto lg:h-[calc(100vh-11rem)] lg:min-h-[540px] lg:max-h-[760px] flex flex-col scroll-mt-4"
+            >
               <DiagnosticsList
                 errors={result.allErrors}
                 sourceCode={code}
                 onApplySingleFix={handleApplySingleFix}
                 onAutoCorrectAll={handleOpenAutoCorrect}
+                lastAnalyzedAt={lastAnalyzedAt}
+                justAnalyzed={justAnalyzed}
               />
             </div>
           </div>

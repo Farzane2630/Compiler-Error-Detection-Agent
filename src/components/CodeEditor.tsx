@@ -10,6 +10,7 @@ interface CodeEditorProps {
   selectedPresetId: string;
   onSelectPreset: (preset: CodePreset) => void;
   errorLineNumbers: number[];
+  justAnalyzed?: boolean;
 }
 
 export const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -19,7 +20,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   onAutoCorrect,
   selectedPresetId,
   onSelectPreset,
-  errorLineNumbers
+  errorLineNumbers,
+  justAnalyzed = false
 }) => {
   const [copied, setCopied] = React.useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -88,6 +90,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
         <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
           <button
+            type="button"
             onClick={handleCopy}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[34px] text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             title="Copy source to clipboard"
@@ -97,6 +100,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => {
               const p = CODE_PRESETS.find((x) => x.id === selectedPresetId) || CODE_PRESETS[0];
               setCode(p.code);
@@ -157,18 +161,28 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
+            type="button"
             onClick={onAutoCorrect}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-3 py-1.5 min-h-[34px] text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-200 rounded transition-colors whitespace-nowrap cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-3 py-1.5 min-h-[34px] text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-200 rounded transition-colors whitespace-nowrap cursor-pointer active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5 shrink-0" />
             <span>Auto-Correct</span>
           </button>
           <button
+            type="button"
             onClick={onAnalyze}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-3 py-1.5 min-h-[34px] text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors whitespace-nowrap cursor-pointer"
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-3 py-1.5 min-h-[34px] text-xs font-semibold text-white rounded transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
+              justAnalyzed
+                ? 'bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-400/50'
+                : 'bg-indigo-600 hover:bg-indigo-700'
+            }`}
           >
-            <Play className="w-3.5 h-3.5 fill-current shrink-0" />
-            <span>Run Analysis</span>
+            {justAnalyzed ? (
+              <Check className="w-3.5 h-3.5 shrink-0" />
+            ) : (
+              <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+            )}
+            <span>{justAnalyzed ? 'Analyzed!' : 'Run Analysis'}</span>
           </button>
         </div>
       </div>
