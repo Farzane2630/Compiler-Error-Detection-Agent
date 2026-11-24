@@ -80,15 +80,35 @@ export const TokensView: React.FC<TokensViewProps> = ({ tokens }) => {
             {filtered.map((t, idx) => {
               const isIllegal = t.type === TokenType.ILLEGAL;
               const isKeyword = [
-                TokenType.VAR,
                 TokenType.INT,
                 TokenType.FLOAT,
+                TokenType.DOUBLE,
+                TokenType.STR,
                 TokenType.STRING,
+                TokenType.CHAR,
                 TokenType.BOOL,
+                TokenType.VOID,
+                TokenType.CONST,
                 TokenType.IF,
+                TokenType.ELIF,
                 TokenType.ELSE,
                 TokenType.WHILE,
-                TokenType.PRINT
+                TokenType.FOR,
+                TokenType.IN,
+                TokenType.DEF,
+                TokenType.RETURN,
+                TokenType.PRINT,
+                TokenType.INPUT,
+                TokenType.COUT,
+                TokenType.CIN,
+                TokenType.ENDL,
+                TokenType.USING,
+                TokenType.NAMESPACE,
+                TokenType.STD,
+                TokenType.PREPROCESSOR,
+                TokenType.AND,
+                TokenType.OR,
+                TokenType.NOT
               ].includes(t.type);
 
               return (

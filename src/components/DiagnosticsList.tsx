@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CompilerError, ErrorPhase } from '../compiler/types';
+import { CompilerError, ErrorPhase, TargetLanguage } from '../compiler/types';
 import {
   CheckCircle2,
   FileCode,
@@ -13,6 +13,7 @@ import {
 interface DiagnosticsListProps {
   errors: CompilerError[];
   sourceCode: string;
+  language?: TargetLanguage;
   onApplySingleFix?: (error: CompilerError) => void;
   onAutoCorrectAll: () => void;
   lastAnalyzedAt?: string | null;
@@ -22,6 +23,7 @@ interface DiagnosticsListProps {
 export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
   errors,
   sourceCode,
+  language = 'python',
   onApplySingleFix,
   onAutoCorrectAll,
   lastAnalyzedAt = null,
@@ -68,6 +70,8 @@ export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
     }
   };
 
+  const langLabel = language === 'python' ? 'Python 3' : 'C++17';
+
   return (
     <div className="flex flex-col h-full space-y-4">
       {/* Analysis Run Status Banner */}
@@ -86,8 +90,8 @@ export const DiagnosticsList: React.FC<DiagnosticsListProps> = ({
           />
           <span>
             {errors.length === 0
-              ? 'Analysis complete · 0 errors'
-              : `Analysis complete · ${errors.length} ${errors.length === 1 ? 'error' : 'errors'} detected`}
+              ? `${langLabel} analysis complete · 0 errors`
+              : `${langLabel} analysis complete · ${errors.length} ${errors.length === 1 ? 'error' : 'errors'} detected`}
           </span>
         </div>
         {lastAnalyzedAt && (

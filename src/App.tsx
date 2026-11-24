@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header, ActiveTab } from './components/Header';
 import { CodeEditor } from './components/CodeEditor';
 import { DiagnosticsList } from './components/DiagnosticsList';
+import { InputTypeCheckerView } from './components/InputTypeCheckerView';
 import { TokensView } from './components/TokensView';
 import { AstVisualizer } from './components/AstVisualizer';
 import { SymbolTableView } from './components/SymbolTableView';
@@ -18,14 +19,16 @@ import { Lexer } from './compiler/lexer';
 import { Parser } from './compiler/parser';
 import { SemanticAnalyzer } from './compiler/semantic';
 import { autoCorrectCode, applySingleErrorFix } from './compiler/corrector';
-import { CompilationResult, CompilerError, CorrectionAction } from './compiler/types';
+import { CompilationResult, CompilerError, CorrectionAction, TargetLanguage } from './compiler/types';
 
 export default function App() {
+  const [language, setLanguage] = useState<TargetLanguage>(CODE_PRESETS[0].language);
   const [code, setCode] = useState<string>(CODE_PRESETS[0].code);
   const [selectedPresetId, setSelectedPresetId] = useState<string>(CODE_PRESETS[0].id);
   const [activeTab, setActiveTab] = useState<ActiveTab>('editor');
 
   const [result, setResult] = useState<CompilationResult>({
+    language: CODE_PRESETS[0].language,
     isValid: false,
     tokens: [],
     lexicalErrors: [],
@@ -43,24 +46,25 @@ export default function App() {
   const [justAnalyzed, setJustAnalyzed] = useState(false);
   const analyzeTimerRef = useRef<number | null>(null);
 
-  // Compiler Analysis Pipeline
-  const runAnalysis = useCallback((source: string) => {
+  // 3-Phase Compiler Analysis Pipeline for Python & C++
+  const runAnalysis = useCallback((source: string, targetLang: TargetLanguage) => {
     // 1. Lexical Analysis
-    const lexer = new Lexer(source);
+    const lexer = new Lexer(source, targetLang);
     const { tokens, errors: lexErrors } = lexer.tokenize();
 
     // 2. Syntax Analysis
-    const parser = new Parser(tokens);
+    const parser = new Parser(tokens, targetLang);
     const { ast, errors: synErrors } = parser.parse();
 
     // 3. Semantic Analysis
-    const analyzer = new SemanticAnalyzer();
+    const analyzer = new SemanticAnalyzer(targetLang);
     const { symbols, errors: semErrors } = analyzer.analyze(ast);
 
     const allErrors: CompilerError[] = [...lexErrors, ...synErrors, ...semErrors];
     const isValid = allErrors.length === 0;
 
     setResult({
+      language: targetLang,
       isValid,
       tokens,
       lexicalErrors: lexErrors,
@@ -80,10 +84,10 @@ export default function App() {
     );
   }, []);
 
-  // Run on mount or when code changes
+  // Run on mount or when code/language changes
   useEffect(() => {
-    runAnalysis(code);
-  }, [code, runAnalysis]);
+    runAnalysis(code, language);
+  }, [code, language, runAnalysis]);
 
   useEffect(() => {
     return () => {
@@ -94,7 +98,7 @@ export default function App() {
   }, []);
 
   const handleManualAnalyze = useCallback(() => {
-    runAnalysis(code);
+    runAnalysis(code, language);
 
     if (activeTab !== 'editor') {
       setActiveTab('editor');
@@ -117,15 +121,26 @@ export default function App() {
         }
       }
     }, 60);
-  }, [activeTab, code, runAnalysis]);
+  }, [activeTab, code, language, runAnalysis]);
+
+  const handleSelectLanguage = (newLang: TargetLanguage) => {
+    if (newLang === language) return;
+    setLanguage(newLang);
+    const firstPreset = CODE_PRESETS.find((p) => p.language === newLang);
+    if (firstPreset) {
+      setSelectedPresetId(firstPreset.id);
+      setCode(firstPreset.code);
+    }
+  };
 
   const handleSelectPreset = (preset: CodePreset) => {
+    setLanguage(preset.language);
     setSelectedPresetId(preset.id);
     setCode(preset.code);
   };
 
   const handleOpenAutoCorrect = () => {
-    const { correctedCode: rep, actions } = autoCorrectCode(code);
+    const { correctedCode: rep, actions } = autoCorrectCode(code, language);
     setCorrectedCode(rep);
     setCorrectionActions(actions);
     setIsAutoCorrectOpen(true);
@@ -133,13 +148,13 @@ export default function App() {
 
   const handleApplyFixes = () => {
     setCode(correctedCode);
-    runAnalysis(correctedCode);
+    runAnalysis(correctedCode, language);
   };
 
   const handleApplySingleFix = (err: CompilerError) => {
-    const repaired = applySingleErrorFix(code, err);
+    const repaired = applySingleErrorFix(code, err, language);
     setCode(repaired);
-    runAnalysis(repaired);
+    runAnalysis(repaired, language);
   };
 
   const errorLineNumbers = Array.from(new Set(result.allErrors.map((e) => e.line)));
@@ -163,6 +178,8 @@ export default function App() {
               <CodeEditor
                 code={code}
                 setCode={setCode}
+                language={language}
+                onSelectLanguage={handleSelectLanguage}
                 onAnalyze={handleManualAnalyze}
                 onAutoCorrect={handleOpenAutoCorrect}
                 selectedPresetId={selectedPresetId}
@@ -179,12 +196,20 @@ export default function App() {
               <DiagnosticsList
                 errors={result.allErrors}
                 sourceCode={code}
+                language={language}
                 onApplySingleFix={handleApplySingleFix}
                 onAutoCorrectAll={handleOpenAutoCorrect}
                 lastAnalyzedAt={lastAnalyzedAt}
                 justAnalyzed={justAnalyzed}
               />
             </div>
+          </div>
+        )}
+
+        {/* Interactive Input Type Checker */}
+        {activeTab === 'input-check' && (
+          <div className="max-w-4xl mx-auto">
+            <InputTypeCheckerView language={language} />
           </div>
         )}
 

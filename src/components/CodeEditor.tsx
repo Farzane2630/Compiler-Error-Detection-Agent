@@ -1,10 +1,13 @@
 import React, { useRef } from 'react';
 import { CODE_PRESETS, CodePreset } from '../compiler/presets';
+import { TargetLanguage } from '../compiler/types';
 import { Copy, RotateCcw, Check, Sparkles, Play } from 'lucide-react';
 
 interface CodeEditorProps {
   code: string;
   setCode: (code: string) => void;
+  language: TargetLanguage;
+  onSelectLanguage: (lang: TargetLanguage) => void;
   onAnalyze: () => void;
   onAutoCorrect: () => void;
   selectedPresetId: string;
@@ -16,6 +19,8 @@ interface CodeEditorProps {
 export const CodeEditor: React.FC<CodeEditorProps> = ({
   code,
   setCode,
+  language,
+  onSelectLanguage,
   onAnalyze,
   onAutoCorrect,
   selectedPresetId,
@@ -26,6 +31,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const [copied, setCopied] = React.useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
+  const languagePresets = CODE_PRESETS.filter((p) => p.language === language);
 
   const lines = code.split('\n');
 
@@ -64,10 +70,40 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
       {/* Editor Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3 sm:px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+          {/* Language Switcher */}
+          <div
+            role="group"
+            aria-label="Target programming language"
+            className="inline-flex rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-0.5 shrink-0"
+          >
+            <button
+              type="button"
+              onClick={() => onSelectLanguage('python')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded transition-colors cursor-pointer ${
+                language === 'python'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Python
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectLanguage('cpp')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded transition-colors cursor-pointer ${
+                language === 'cpp'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              C++
+            </button>
+          </div>
+
           <label
             htmlFor="preset-select"
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0 hidden sm:inline"
           >
             Preset:
           </label>
@@ -78,9 +114,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               const p = CODE_PRESETS.find((x) => x.id === e.target.value);
               if (p) onSelectPreset(p);
             }}
-            className="w-full sm:w-auto min-w-0 max-w-full truncate text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 min-h-[34px] text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="flex-1 min-w-[140px] max-w-full truncate text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 min-h-[34px] text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            {CODE_PRESETS.map((p) => (
+            {languagePresets.map((p) => (
               <option key={p.id} value={p.id}>
                 [{p.category}] {p.title}
               </option>
@@ -145,9 +181,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           onScroll={handleScroll}
           onKeyDown={handleKeyDown}
           spellCheck={false}
-          aria-label="SimpleLang Source Code Editor"
+          aria-label="Source Code Editor"
           className="flex-1 p-3 bg-transparent text-slate-100 placeholder-slate-600 resize-none focus:outline-none font-mono text-xs sm:text-sm leading-6 whitespace-pre overflow-auto"
-          placeholder="// Enter or paste SimpleLang code here..."
+          placeholder={`// Enter or paste ${language === 'python' ? 'Python 3' : 'C++17'} code here...`}
         />
       </div>
 
@@ -156,7 +192,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         <div className="flex items-center gap-3 tabular-nums">
           <span>{lines.length} lines</span>
           <span>{code.length} chars</span>
-          <span className="hidden xl:inline">SimpleLang</span>
+          <span className="hidden xl:inline font-semibold text-indigo-600 dark:text-indigo-400">
+            {language === 'python' ? 'Python 3' : 'C++17'}
+          </span>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">

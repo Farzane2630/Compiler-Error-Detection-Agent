@@ -53,10 +53,12 @@ export const SymbolTableView: React.FC<SymbolTableViewProps> = ({ symbols }) => 
                       className={`px-2 py-0.5 rounded font-bold ${
                         sym.type === 'int'
                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
-                          : sym.type === 'float'
+                          : sym.type === 'float' || sym.type === 'double'
                           ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300'
-                          : sym.type === 'string'
+                          : sym.type === 'string' || sym.type === 'str' || sym.type === 'char'
                           ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                          : sym.type.startsWith('fn')
+                          ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
                           : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                       }`}
                     >

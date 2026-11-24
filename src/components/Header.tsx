@@ -1,7 +1,7 @@
 import React from 'react';
 import { Play, Sparkles /*, BookOpen */ } from 'lucide-react';
 
-export type ActiveTab = 'editor' | 'tokens' | 'ast' | 'symbols'; // | 'python'
+export type ActiveTab = 'editor' | 'input-check' | 'tokens' | 'ast' | 'symbols'; // | 'python'
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -14,6 +14,7 @@ interface HeaderProps {
 
 const NAV_ITEMS: { id: ActiveTab; label: string; mobileLabel: string }[] = [
   { id: 'editor', label: 'Diagnostics & Editor', mobileLabel: 'Editor' },
+  { id: 'input-check', label: 'Input Type Check', mobileLabel: 'Type Check' },
   { id: 'tokens', label: 'Lexical Tokens', mobileLabel: 'Tokens' },
   { id: 'ast', label: 'Syntax AST Tree', mobileLabel: 'AST' },
   { id: 'symbols', label: 'Symbol Table', mobileLabel: 'Symbols' }
@@ -36,8 +37,8 @@ export const Header: React.FC<HeaderProps> = ({
             μC
           </div>
           <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 whitespace-nowrap truncate">
-            <span className="sm:hidden">SimpleLang</span>
-            <span className="hidden sm:inline">SimpleLang Compiler Agent</span>
+            <span className="sm:hidden">Py/C++ Agent</span>
+            <span className="hidden sm:inline">Python &amp; C++ Compiler Agent</span>
           </span>
         </div>
 
